@@ -42,7 +42,7 @@ func (s *MemorySessionMgr) CreateSession() (session Session, err error) {
 	return
 }
 
-func NewMemorySession() *SessionMgr {
+func NewMemorySessionMgr() SessionMgr {
 	sr := &MemorySessionMgr{
 		sessionMap: make(map[string]Session, 1024),
 	}

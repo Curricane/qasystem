@@ -10,13 +10,22 @@ var (
 func Init(provider string, addr string, options ...string) (err error) {
 	switch provider {
 	case "memory":
-		sessionMgr = NewMemorySession()
+		sessionMgr = NewMemorySessionMgr()
 	case "redis":
-		sessionMgr = NewRedisSession()
+		sessionMgr = NewRedisSessionMgr()
 	default:
 		err = fmt.Errorf("not support")
 		return
 	}
-	err = sessionMgr.Init(addr, options)
+	err = sessionMgr.Init(addr, options...)
 	return
 }
+
+func CreateSession() (session Session, err error) {
+	return sessionMgr.CreateSession()
+}
+func Get(sessionid string) (session Session, err error) {
+	return sessionMgr.Get(sessionid)
+}
+
+

@@ -77,7 +77,7 @@ func (r *RedisSessionMgr) CreateSession() (session Session, err error) {
 	return
 }
 
-func NewRedisSession() *SessionMgr {
+func NewRedisSessionMgr() SessionMgr {
 	sr := &RedisSessionMgr{
 		sessionMap: make(map[string]Session, 1024),
 	}
