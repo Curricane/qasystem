@@ -2,6 +2,7 @@ package account
 
 const (
 	CookieSessionId = "session_id" // 常量 用户作为key，session_id
+	CookieMaxAge = 30 * 24 * 3600 // 30天
 )
 
 const (
