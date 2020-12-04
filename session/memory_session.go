@@ -8,6 +8,7 @@ import (
 type MemorySession struct {
 	data   map[string]interface{}
 	id     string
+	flag  int
 	rwlock sync.RWMutex
 }
 
@@ -16,6 +17,7 @@ func NewMemorySession(id string) *MemorySession {
 	s := &MemorySession{
 		id:   id,
 		data: make(map[string]interface{}, 16),
+		flag: SessionFlagNone,
 	}
 
 	return s
@@ -28,6 +30,7 @@ func (m *MemorySession) Set(key string, value interface{}) (err error) {
 	defer m.rwlock.Unlock()
 
 	m.data[key] = value
+	m.flag = SessionFlagModify
 	return
 }
 
@@ -57,10 +60,29 @@ func (m *MemorySession) Del(key string) (err error) {
 	// }
 
 	delete(m.data, key)
+	m.flag = SessionFlagModify
 	return
 }
 
 // Save 仅实现接口 do nothing
 func (m *MemorySession) Save() (err error) {
 	return
+}
+
+func (m *MemorySession) IsModify() bool {
+	m.rwlock.RLock()
+	defer m.rwlock.RUnlock()
+
+	if m.flag == SessionFlagModify {
+		return true
+	}
+
+	return false
+}
+
+func (m *MemorySession) Id() (id string) {
+	m.rwlock.RLock()
+	defer m.rwlock.RUnlock()
+
+	return m.id
 }

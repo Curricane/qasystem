@@ -23,8 +23,8 @@ type RedisSession struct {
 
 func NewRedisSession(id string, pool *redis.Pool) *RedisSession {
 	s := &RedisSession{
-		id:   id,
-		data: make(map[string]interface{}, 16),
+		sessionId:   id,
+		sessionMap: make(map[string]interface{}, 16),
 		flag: SessionFlagNone,
 		pool: pool,
 	}
@@ -111,4 +111,21 @@ func (r *RedisSession) Save() (err error) {
 		return
 	}
 	return
+}
+
+func (r *RedisSession) IsModify() bool {
+	r.rwlock.RLock()
+	defer r.rwlock.RUnlock()
+	if r.flag == SessionFlagModify {
+		return true
+	}
+
+	return false
+}
+
+func (r *RedisSession) Id() (id string) {
+	r.rwlock.RLock()
+	defer r.rwlock.RUnlock()
+
+	return r.sessionId
 }
