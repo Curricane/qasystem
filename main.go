@@ -49,5 +49,7 @@ func main() {
 
 	initTemplate(router)
 	router.POST("/api/user/register", account.RegisterHandle)
+	router.POST("/api/user/login", account.LoginHandle)
+
 	router.Run(":9090")
 }
