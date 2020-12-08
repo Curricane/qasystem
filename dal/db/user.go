@@ -15,7 +15,7 @@ func Login(user *common.UserInfo) (err error) {
 	//先保存用户密码
 	originPassword := user.Password
 
-	sqlstr := "select username, password from user where username=?"
+	sqlstr := "select username, password, user_id from user where username=?"
 	err = DB.Get(user, sqlstr, user.Username)
 	// 查询数据库出错
 	if (err != nil ) && (err != sql.ErrNoRows) {
