@@ -10,6 +10,38 @@ import (
 // 以后可以改成根据用户信息生成一个salt，并存到数据库中
 var PasswordSalt string = "123456789"
 
+func Login(user *common.UserInfo) (err error) {
+
+	//先保存用户密码
+	originPassword := user.Password
+
+	sqlstr := "select username, password from user where username=?"
+	err = DB.Get(user, sqlstr, user.Username)
+	// 查询数据库出错
+	if (err != nil ) && (err != sql.ErrNoRows) {
+		fmt.Println("failed to get username, password, err is:", err)
+		return
+	}
+
+	// 查询不到用户
+	if err == sql.ErrNoRows {
+		err = ErrUserNotExits
+		return
+	}
+
+	// 用户密码+salt 取md5值
+	passwd := originPassword + PasswordSalt
+	originPasswordSalt := util.Md5([]byte(passwd))
+
+	// 对比MD5值
+	if originPasswordSalt != user.Password {
+		err = ErrUserPasswordWrong
+		return
+	}
+
+	return
+}
+
 func Register(user *common.UserInfo) (err error) {
 	if len(user.Username) == 0 || len(user.Password) == 0 || len(user.Email) == 0 {
 		err = fmt.Errorf("invalid UserInfo")
