@@ -54,7 +54,7 @@ func LoginHandle(ctx *gin.Context) {
 		return
 	}
 
-
+	// 在session中设置user_id，下次访问时，可以通过session中的user_id来判断该用户是否近期登录过
 	err = mdlacc.SetUserId(int64(userInfo.UserId), ctx)
 
 }
