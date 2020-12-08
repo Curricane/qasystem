@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/gin-gonic/gin"
 	"qasystem/controller/account"
+	mdlacc "qasystem/middleware/account"
 	"qasystem/dal/db"
 	"qasystem/id_gen"
 )
@@ -13,6 +14,11 @@ func initDb() (err error) {
 	if err != nil {
 		return
 	}
+	return
+}
+
+func initSession() (err error) {
+	err = mdlacc.InitSession("memory", "")
 	return
 }
 
@@ -37,6 +43,11 @@ func main() {
 	router := gin.Default()
 
 	err := initDb()
+	if err != nil {
+		panic(err)
+	}
+
+	err = initSession()
 	if err != nil {
 		panic(err)
 	}
