@@ -1,17 +1,34 @@
 package account
 
 import (
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"qasystem/common"
 	"qasystem/dal/db"
 	"qasystem/id_gen"
+	mdlacc "qasystem/middleware/account"
 	"qasystem/util"
 )
 
 func LoginHandle(ctx *gin.Context) {
-	// step1 获取登录信息 UserInfo
 	var userInfo common.UserInfo
-	err := ctx.BindJSON(&userInfo)
+	var err error
+	mdlacc.ProcessRequest(ctx)
+
+	defer func() {
+		if err != nil {
+			return
+		}
+
+		// 由于gin框架的特性，需要在util.ResponseSuccess之前调用，不能放在defer中
+		fmt.Println("ProcessResponse")
+		mdlacc.ProcessResponse(ctx)
+		// 登录成功，那么我们设置user_id到用户session中
+		util.ResponseSuccess(ctx, nil)
+	}()
+	// step1 获取登录信息 UserInfo
+
+	err = ctx.BindJSON(&userInfo)
 	if err != nil {
 		util.ResponseError(ctx, util.ErrCodeParameter)
 		return
@@ -37,8 +54,9 @@ func LoginHandle(ctx *gin.Context) {
 		return
 	}
 
-	// 登录成功
-	util.ResponseSuccess(ctx, nil)
+
+	err = mdlacc.SetUserId(int64(userInfo.UserId), ctx)
+
 }
 
 func RegisterHandle(ctx *gin.Context) {
