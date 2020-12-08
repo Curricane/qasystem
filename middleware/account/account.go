@@ -2,13 +2,14 @@ package account
 
 import (
 	"errors"
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"qasystem/session"
 )
 
 // 请求处理前的账号中间件函数
-func processRequest(ctx *gin.Context) {
+func ProcessRequest(ctx *gin.Context) {
 
 	var userSession session.Session
 	var err error
@@ -16,6 +17,7 @@ func processRequest(ctx *gin.Context) {
 	// 最后确保有一个会话存到gin框架中
 	defer func() {
 		if userSession == nil {
+			fmt.Println("userSession == nil, CreateSession")
 			userSession, err = session.CreateSession()
 		}
 
@@ -25,6 +27,7 @@ func processRequest(ctx *gin.Context) {
 	// step1 获取cookie
 	cookie, err := ctx.Request.Cookie(CookieSessionId)
 	if err != nil {
+		fmt.Println("no CookieSessionId in Cookie")
 		ctx.Set(QAsystemUserId, int64(0))
 		ctx.Set(QAsystemUserLoginStatus, int64(0))
 		return
@@ -33,6 +36,7 @@ func processRequest(ctx *gin.Context) {
 	// step2 从cookie中获取sessionId
 	sessionId := cookie.Value
 	if len(sessionId) == 0 {
+		fmt.Println("no CookieSessionId value in Cookie")
 		ctx.Set(QAsystemUserId, int64(0))
 		ctx.Set(QAsystemUserLoginStatus, int64(0))
 		return
@@ -42,6 +46,7 @@ func processRequest(ctx *gin.Context) {
 	userSession, err =  session.Get(sessionId)
 	if err != nil {
 		// 获取不到，则认为没有登录过，设置用户登录状态0
+		fmt.Println("no SessionId in Cookie")
 		ctx.Set(QAsystemUserId, int64(0))
 		ctx.Set(QAsystemUserLoginStatus, int64(0))
 		return
@@ -85,6 +90,33 @@ func GetUserId(ctx *gin.Context) (userId int64, err error) {
 	return
 }
 
+// 设置用户id到session中
+func SetUserId(userId int64, ctx *gin.Context) (err error) {
+	// step1 获取当前Session
+	var userSession session.Session
+	tmpSession, ok := ctx.Get(QAsystemSessionName)
+	if !ok {
+		// 无session，不处理
+		fmt.Println("cannt get tmpSession in ctx")
+		return
+	}
+	userSession, ok = tmpSession.(session.Session)
+	if !ok {
+		// 错误的值，不处理
+		fmt.Println("error type session")
+		return
+	}
+
+	if userSession == nil {
+		fmt.Println("userSession == nil")
+		return
+	}
+
+	// 登录 首次设置cookie
+	err = userSession.Set(QAsystemUserId, userId)
+	return
+}
+
 func IsLogin(ctx *gin.Context)(login bool) {
 	tmpLoginStatus, ok := ctx.Get(QAsystemUserLoginStatus)
 	if !ok {
@@ -104,28 +136,32 @@ func IsLogin(ctx *gin.Context)(login bool) {
 }
 
 // 响应处理前的账号中间件函数，看是否需要更新Session和Cookie
-func processResponse(ctx *gin.Context) {
+func ProcessResponse(ctx *gin.Context) {
 
 	// step1 获取当前Session
 	var userSession session.Session
 	tmpSession, ok := ctx.Get(QAsystemSessionName)
 	if !ok {
 		// 无session，不处理
+		fmt.Println("cannt get tmpSession in ctx")
 		return
 	}
 	userSession, ok = tmpSession.(session.Session)
 	if !ok {
 		// 错误的值，不处理
+		fmt.Println("error type session")
 		return
 	}
 
 	// step2 session有修改，则在服务器里更新session
 	if userSession.IsModify() == false {
+		fmt.Println("userSession.IsModify() == false")
 		return
 	}
 	err := userSession.Save()
 	if err != nil {
 		// 系统更新不了session，不继续处理
+		fmt.Println("cannt save session")
 		return
 	}
 
@@ -139,5 +175,6 @@ func processResponse(ctx *gin.Context) {
 		Path: "/",
 	}
 	http.SetCookie(ctx.Writer, cookie)
+	fmt.Println("set cookie ok")
 	return
 }
