@@ -9,7 +9,36 @@ import (
 )
 
 func LoginHandle(ctx *gin.Context) {
+	// step1 获取登录信息 UserInfo
+	var userInfo common.UserInfo
+	err := ctx.BindJSON(&userInfo)
+	if err != nil {
+		util.ResponseError(ctx, util.ErrCodeParameter)
+		return
+	}
 
+	if len(userInfo.Password) == 0 || len(userInfo.Username) == 0 {
+		util.ResponseError(ctx, util.ErrCodeParameter)
+		return
+	}
+
+	err = db.Login(&userInfo)
+	switch err {
+	case db.ErrUserNotExits:
+		util.ResponseError(ctx, util.ErrCodeUserNotExit)
+		return
+	case db.ErrUserPasswordWrong:
+		util.ResponseError(ctx, util.ErrCodeUserPasswordWrong)
+		return
+	case nil:
+		break
+	default:
+		util.ResponseError(ctx, util.ErrCodeServerBusy)
+		return
+	}
+
+	// 登录成功
+	util.ResponseSuccess(ctx, nil)
 }
 
 func RegisterHandle(ctx *gin.Context) {
