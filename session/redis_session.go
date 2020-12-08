@@ -14,17 +14,17 @@ const (
 )
 
 type RedisSession struct {
-	sessionId  string
+	id  string
 	pool       *redis.Pool
-	sessionMap map[string]interface{} // 先存放session，后面再存到redis
+	data map[string]interface{} // 先存放session，后面再存到redis
 	rwlock     sync.RWMutex
 	flag       int
 }
 
 func NewRedisSession(id string, pool *redis.Pool) *RedisSession {
 	s := &RedisSession{
-		sessionId:   id,
-		sessionMap: make(map[string]interface{}, 16),
+		id:   id,
+		data: make(map[string]interface{}, 16),
 		flag: SessionFlagNone,
 		pool: pool,
 	}
@@ -36,14 +36,14 @@ func (r *RedisSession) Set(key string, value interface{}) error {
 	r.rwlock.Lock()
 	defer r.rwlock.Unlock()
 
-	r.sessionMap[key] = value
+	r.data[key] = value
 	r.flag = SessionFlagModify
 	return nil
 }
 
 func (r *RedisSession) loadFromRedis() (err error) {
 	conn := r.pool.Get()
-	reply, err := conn.Do("GET", r.sessionId)
+	reply, err := conn.Do("GET", r.data)
 	if err != nil {
 		return
 	}
@@ -54,7 +54,7 @@ func (r *RedisSession) loadFromRedis() (err error) {
 		return
 	}
 
-	json.Unmarshal([]byte(data), &r.sessionMap)
+	json.Unmarshal([]byte(data), &r.data)
 	if err != nil {
 		return
 	}
@@ -75,7 +75,7 @@ func (r *RedisSession) Get(key string) (result interface{}, err error) {
 		}
 	}
 
-	result, ok := r.sessionMap[key]
+	result, ok := r.data[key]
 	if !ok {
 		err = ErrKeyNotExistInSession
 		return
@@ -88,7 +88,7 @@ func (r *RedisSession) Del(key string) error {
 	defer r.rwlock.Unlock()
 
 	r.flag = SessionFlagModify
-	delete(r.sessionMap, key)
+	delete(r.data, key)
 	return nil
 }
 func (r *RedisSession) Save() (err error) {
@@ -100,13 +100,13 @@ func (r *RedisSession) Save() (err error) {
 		return
 	}
 
-	data, err := json.Marshal(r.sessionMap)
+	data, err := json.Marshal(r.data)
 	if err != nil {
 		return
 	}
 
 	conn := r.pool.Get()
-	_, err = conn.Do("SET", r.sessionId, string(data))
+	_, err = conn.Do("SET", r.id, string(data))
 	if err != nil {
 		return
 	}
@@ -127,5 +127,5 @@ func (r *RedisSession) Id() (id string) {
 	r.rwlock.RLock()
 	defer r.rwlock.RUnlock()
 
-	return r.sessionId
+	return r.id
 }
