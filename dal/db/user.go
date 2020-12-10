@@ -3,6 +3,8 @@ package db
 import (
 	"database/sql"
 	"fmt"
+	"github.com/Curricane/logger"
+	"github.com/jmoiron/sqlx"
 	"qasystem/common"
 	"qasystem/util"
 )
@@ -19,7 +21,7 @@ func Login(user *common.UserInfo) (err error) {
 	err = DB.Get(user, sqlstr, user.Username)
 	// 查询数据库出错
 	if (err != nil ) && (err != sql.ErrNoRows) {
-		fmt.Println("failed to get username, password, err is:", err)
+		logger.Error("failed to get username, password, err is:", err)
 		return
 	}
 
@@ -44,6 +46,7 @@ func Login(user *common.UserInfo) (err error) {
 
 func Register(user *common.UserInfo) (err error) {
 	if len(user.Username) == 0 || len(user.Password) == 0 || len(user.Email) == 0 {
+		logger.Error("invalid UserInfo, user is:%v", user)
 		err = fmt.Errorf("invalid UserInfo")
 		return
 	}
@@ -52,6 +55,7 @@ func Register(user *common.UserInfo) (err error) {
 	sqlstr := "select count(user_id) from user where username = ?"
 	err = DB.Get(&count, sqlstr, user.Username)
 	if err != nil && err != sql.ErrNoRows {
+		logger.Warn("failed to get user.Username count")
 		return
 	}
 
@@ -68,9 +72,36 @@ func Register(user *common.UserInfo) (err error) {
 	sqlstr = "insert into user(username, password, email , user_id, sex, nickname) values(?,?,?,?,?,?)"
 	_, err = DB.Exec(sqlstr, user.Username, dbPassword, user.Email, user.UserId, user.Sex, user.Nickname)
 	if err != nil {
-		fmt.Println(err)
+		logger.Error("faied to insert new user to db, err is: %v", err)
 		err = fmt.Errorf("failed to insert userinfo to db")
 		return err
+	}
+
+	return
+}
+
+func GetUserInfoList(userIdList []int64) (userInfoList []*common.UserInfo, err error) {
+	if len(userIdList) == 0 {
+		logger.Warn("len(userIdList) == 0")
+		return
+	}
+
+	sqlstr := `select user_id, nickname, sex, username, email from user
+				where user_id in (?)`
+	var userIdTmpArr []interface{}
+	for _, userId := range userIdList {
+		userIdTmpArr = append(userIdTmpArr, userId)
+	}
+	query, args, err := sqlx.In(sqlstr, userIdTmpArr)
+	if err != nil {
+		logger.Error("sqlx in failed, sqlstr:%v, user_ids:%#v, err:%v", sqlstr, userIdList, err)
+		return
+	}
+
+	err = DB.Select(&userInfoList, query, args...)
+	if err != nil {
+		logger.Error("get question list failed, query:%v, err:%v", query, err)
+		return
 	}
 
 	return
