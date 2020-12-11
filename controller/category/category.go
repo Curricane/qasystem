@@ -89,7 +89,7 @@ func GetQuestionListHandle(ctx *gin.Context) {
 
 		// 问题对应的 apiQ.AuthorName
 		for _, userInfo := range userInfoList {
-			logger.Debug(q.AuthorIdStr, userInfo.UserId, int64(userInfo.UserId))
+			logger.Debug("q.AuthorIdStr:%v, userInfo.UserId:%v, int64(userInfo.UserId):%v", q.AuthorIdStr, userInfo.UserId, int64(userInfo.UserId))
 			if q.AuthorId == int64(userInfo.UserId) {
 				apiQ.AuthorName = userInfo.Username
 				break
