@@ -4,6 +4,7 @@ import (
 	"github.com/Curricane/logger"
 	"github.com/gin-gonic/gin"
 	"qasystem/controller/account"
+	"qasystem/controller/answer"
 	"qasystem/controller/category"
 	"qasystem/controller/question"
 	"qasystem/filter"
@@ -93,6 +94,9 @@ func main() {
 	router.POST("/api/user/login", account.LoginHandle)
 	router.GET("/api/category/list", category.GetCategoryListHandle)
 	router.POST("/api/ask/submit", mdlacc.AuthMiddleware, question.QuestionSubmitHandle)
-	router.GET("api/question/list", category.GetQuestionListHandle)
+	router.GET("/api/question/list", category.GetQuestionListHandle)
+	router.GET("/api/question/detail", question.QuestionDetailHandle)
+	router.GET("/api/answer/list", answer.AnswerListHandle)
+	router.POST("/api/answer/commit", mdlacc.AuthMiddleware, answer.AnswerCommitHandle)
 	router.Run(":9090")
 }
