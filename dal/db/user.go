@@ -108,6 +108,5 @@ func GetUserInfoList(userIdList []int64) (userInfoList []*common.UserInfo, err e
 		logger.Error("get question list failed, query:%v, err:%v", query, err)
 		return
 	}
-	logger.Debug("userInfoList is %v", userInfoList)
 	return
 }
