@@ -15,8 +15,8 @@ func CreateQuestion(q *common.Question) (err error) {
 	return
 }
 
-func GetQuestion(qid int64) (qlist []*common.Question, err error) {
-	q := &common.Question{}
+func GetQuestion(qid int64) (q *common.Question, err error) {
+	q = &common.Question{}
 	sqlstr := `select question_id, caption, content, author_id, category_id, create_time from question where question_id = ?`
 	err = DB.Get(q, sqlstr, qid)
 	if err != nil {
