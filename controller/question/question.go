@@ -53,6 +53,7 @@ func QuestionSubmitHandle(ctx *gin.Context) {
 		util.ResponseError(ctx, util.ErrCodeNotLogin)
 		return
 	}
+	question.AuthorId = userId
 	logger.Debug("create question succ, question:%#v", question)
 
 	err = db.CreateQuestion(&question)

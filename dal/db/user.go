@@ -86,12 +86,17 @@ func GetUserInfoList(userIdList []int64) (userInfoList []*common.UserInfo, err e
 		return
 	}
 
+	logger.Debug("userIdList is %v", userIdList)
+
+
 	sqlstr := `select user_id, nickname, sex, username, email from user
 				where user_id in (?)`
 	var userIdTmpArr []interface{}
 	for _, userId := range userIdList {
 		userIdTmpArr = append(userIdTmpArr, userId)
 	}
+
+	// In函数把userIdTmpArr中的userid 都生成一个sqlstr 组合在一起
 	query, args, err := sqlx.In(sqlstr, userIdTmpArr)
 	if err != nil {
 		logger.Error("sqlx in failed, sqlstr:%v, user_ids:%#v, err:%v", sqlstr, userIdList, err)
@@ -103,6 +108,6 @@ func GetUserInfoList(userIdList []int64) (userInfoList []*common.UserInfo, err e
 		logger.Error("get question list failed, query:%v, err:%v", query, err)
 		return
 	}
-
+	logger.Debug("userInfoList is %v", userInfoList)
 	return
 }

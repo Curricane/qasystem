@@ -93,5 +93,6 @@ func main() {
 	router.POST("/api/user/login", account.LoginHandle)
 	router.GET("/api/category/list", category.GetCategoryListHandle)
 	router.POST("/api/ask/submit", mdlacc.AuthMiddleware, question.QuestionSubmitHandle)
+	router.GET("api/question/list", category.GetQuestionListHandle)
 	router.Run(":9090")
 }

@@ -22,7 +22,7 @@ func GetCategoryListHandle(ctx *gin.Context) {
 
 
 // 通过category_id 获取问题列表，问题列表中的问题是*common.ApiQuestion
-func GetQuestionHandle(ctx *gin.Context) {
+func GetQuestionListHandle(ctx *gin.Context) {
 	categoryIdStr, ok := ctx.GetQuery("category_id")
 	if !ok {
 		logger.Error("invalid category_id, not found category_id")
@@ -74,6 +74,9 @@ func GetQuestionHandle(ctx *gin.Context) {
 		util.ResponseError(ctx, util.ErrCodeServerBusy)
 		return
 	}
+	if len(userInfoList) == 0 {
+		logger.Warn("len(userInfoList) == 0 ")
+	}
 
 	// 问题列表+用户信息 组成ApiQuestion
 	var apiQuestionList []*common.ApiQuestion
@@ -86,6 +89,7 @@ func GetQuestionHandle(ctx *gin.Context) {
 
 		// 问题对应的 apiQ.AuthorName
 		for _, userInfo := range userInfoList {
+			logger.Debug(q.AuthorIdStr, userInfo.UserId, int64(userInfo.UserId))
 			if q.AuthorId == int64(userInfo.UserId) {
 				apiQ.AuthorName = userInfo.Username
 				break

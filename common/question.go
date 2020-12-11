@@ -3,7 +3,7 @@ package common
 import "time"
 
 type Question struct {
-	QuestionId int64 `json:"question_id_number", db:"question_id"`
+	QuestionId int64 `json:"question_id_number" db:"question_id"`
 	Caption       string    `json:"caption" db:"caption"`
 	Content       string    `json:"content" db:"content"`
 	AuthorId      int64     `json:"author_id_number" db:"author_id"`
