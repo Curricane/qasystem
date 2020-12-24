@@ -6,6 +6,8 @@ import (
 	"qasystem/controller/account"
 	"qasystem/controller/answer"
 	"qasystem/controller/category"
+	"qasystem/controller/comment"
+	"qasystem/controller/favorite"
 	"qasystem/controller/question"
 	"qasystem/filter"
 	mdlacc "qasystem/middleware/account"
@@ -98,5 +100,21 @@ func main() {
 	router.GET("/api/question/detail", question.QuestionDetailHandle)
 	router.GET("/api/answer/list", answer.AnswerListHandle)
 	router.POST("/api/answer/commit", mdlacc.AuthMiddleware, answer.AnswerCommitHandle)
+
+	// 评论模块
+	commentGroup := router.Group("/api/comment/", mdlacc.AuthMiddleware)
+	commentGroup.POST("/post_comment", comment.PostCommentHandle)
+	commentGroup.POST("/post_reply", comment.PostReplyHandle)
+	commentGroup.GET("/list", comment.CommentListHandle)
+	commentGroup.GET("/reply_list", comment.ReplyListHandle)
+	commentGroup.POST("/like", comment.LikeHandle)
+
+	//收藏模块路由
+	favoriteGroup := router.Group("/api/favorite/")
+	favoriteGroup.POST("/add_dir", favorite.AddDirHandle)
+	favoriteGroup.POST("/add", favorite.AddFavoriteHandle)
+	favoriteGroup.GET("/dir_list", favorite.DirListHandle)
+	favoriteGroup.GET("/list", favorite.FavoriteListHandle)
+
 	router.Run(":9090")
 }
