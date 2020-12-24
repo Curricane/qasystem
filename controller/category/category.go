@@ -86,6 +86,7 @@ func GetQuestionListHandle(ctx *gin.Context) {
 		apiQ.QuestionIdStr = fmt.Sprintf("%d", apiQ.QuestionId)
 		apiQ.AuthorIdStr = fmt.Sprintf("%d", apiQ.AuthorId)
 		apiQ.CreateTimeStr = apiQ.CreateTime.Format("2006/1/2 15:04:05")
+		logger.Info("apiQ.QuestionId is:%d, apiQ.QuestionIdStr:%v", apiQ.QuestionId, apiQ.QuestionIdStr)
 
 		// 问题对应的 apiQ.AuthorName
 		for _, userInfo := range userInfoList {
