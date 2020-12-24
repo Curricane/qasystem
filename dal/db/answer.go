@@ -36,7 +36,7 @@ func CreateAnswer(answer *common.Answer, qid int64) (err error) {
 	}
 
 	// step1 存储answer基本信息
-	sqlstr := "insert into answer(answer_id, content, anthor_id) values(?, ?, ?)"
+	sqlstr := "insert into answer(answer_id, content, author_id) values(?, ?, ?)"
 	// 涉及到一个业务多个表操作，用事务提交
 	tx, err := DB.Begin()
 	if err != nil {
@@ -98,8 +98,8 @@ func MGetAnswer(answerIds []int64) (answerList []*common.Answer, err error) {
 	for _, c := range answerIds {
 		interfaceSlice = append(interfaceSlice, c)
 	}
-	// 扩展为多个单查询的组合 类似 list(map(lambda x: select(x), interfaceSlice))
-	insqlStr, params, err := sqlx.In(sqlstr, interfaceSlice)
+	// 把一个？扩展为in (?, ?, ?)等
+	insqlStr, params, err := sqlx.In(sqlstr, interfaceSlice) // interfaceSlice不能展开
 	if err != nil {
 		logger.Error("sqlx.in failed, sqlstr:%v, err:%v", sqlstr, err)
 		return
@@ -107,7 +107,7 @@ func MGetAnswer(answerIds []int64) (answerList []*common.Answer, err error) {
 	logger.Debug("insqlStr:%v", insqlStr)
 	logger.Debug("params:%v", params)
 
-	err = DB.Select(&answerList, insqlStr, params)
+	err = DB.Select(&answerList, insqlStr, params...) // params需要展开
 	if err != nil {
 		logger.Error("MGetAnswer  failed, insqlStr:%v, category_ids:%v, err:%v",
 			insqlStr, answerIds, err)
