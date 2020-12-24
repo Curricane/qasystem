@@ -31,7 +31,7 @@ func AnswerListHandle(ctx *gin.Context) {
 	limit, err := util.GetQueryInt64(ctx, "limit")
 	if err != nil {
 		logger.Error("get limit failed, set 100 as default, err:%v", err)
-		limit = 0
+		limit = 100
 	}
 	logger.Debug("get answer list parameter succ, qid:%v, offset:%v, limit:%v",
 		qid, offset, limit)
