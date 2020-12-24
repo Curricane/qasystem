@@ -83,6 +83,7 @@ func QuestionDetailHandle(ctx *gin.Context) {
 		util.ResponseError(ctx, util.ErrCodeParameter)
 		return
 	}
+	logger.Debug("get questionId:%d", questionId)
 
 	question, err := db.GetQuestion(questionId)
 	if err != nil {
@@ -90,6 +91,7 @@ func QuestionDetailHandle(ctx *gin.Context) {
 		util.ResponseError(ctx, util.ErrCodeServerBusy)
 		return
 	}
+	question.QuestionIdStr = strconv.Itoa(int(question.QuestionId))
 
 	categoryMap, err := db.MGetCategory([]int64{question.CategoryId})
 	if err != nil {
@@ -117,6 +119,6 @@ func QuestionDetailHandle(ctx *gin.Context) {
 	apiQuestionDetail.Question = *question
 	apiQuestionDetail.AuthorName = userInfoList[0].Username
 	apiQuestionDetail.CategoryName = category.CategoryName
-
+	logger.Debug("apiQuestionDetail is: %v", apiQuestionDetail)
 	util.ResponseSuccess(ctx, apiQuestionDetail)
 }
