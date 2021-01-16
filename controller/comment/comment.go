@@ -2,8 +2,6 @@ package comment
 
 import (
 	"fmt"
-	"github.com/Curricane/logger"
-	"github.com/gin-gonic/gin"
 	"html"
 	"qasystem/common"
 	"qasystem/dal/db"
@@ -12,6 +10,9 @@ import (
 	"qasystem/util"
 	"strconv"
 	"strings"
+
+	"github.com/Curricane/logger"
+	"github.com/gin-gonic/gin"
 )
 
 const (
@@ -35,14 +36,12 @@ func checkComment(cmt *common.Comment) (err error) {
 	return
 }
 
-/* 发表level 2评论
+// PostReplyHandle 发表level 2评论
+/*
 type Comment struct {
 	CommentId       int64     // 无，id_gen生成
 	Content         string    // 前端传过来
 	AuthorId        int64     // 无，从session中获取
-	LikeCount       int       // 无，不需要
-	CommentCount    int       // 无，不需要
-	CreateTime      time.Time // 无，不需要
 	ParentId        int64     // 前端传过来，level 2时 为被评论的comment_id
 	QuestionId      int64     // 前端传过来，回答/问题的id
 	ReplyAuthorId   int64     // 前端传过来，level2评论，被评论的评论者id，也可以根据ReplyCommentId查询
@@ -115,7 +114,7 @@ type Comment struct {
 	ReplyAuthorName string    // 前端传过来
 	QuestionIdStr   string    // 前端传过来
 }
- */
+*/
 func PostCommentHandle(ctx *gin.Context) {
 	var cmt common.Comment
 	err := ctx.BindJSON(&cmt)
@@ -129,7 +128,7 @@ func PostCommentHandle(ctx *gin.Context) {
 	// 获取问题/回答id
 	cmt.QuestionId, err = strconv.ParseInt(cmt.QuestionIdStr, 10, 64)
 	if err != nil {
-		logger.Error("cmt.QuestionIdStr is:%v cannt convert to int, err is:%v",cmt.QuestionIdStr, err)
+		logger.Error("cmt.QuestionIdStr is:%v cannt convert to int, err is:%v", cmt.QuestionIdStr, err)
 		util.ResponseError(ctx, util.ErrCodeParameter)
 		return
 	}
@@ -164,6 +163,7 @@ func PostCommentHandle(ctx *gin.Context) {
 	util.ResponseSuccess(ctx, nil)
 }
 
+// CommentListHandle 评论列表
 func CommentListHandle(ctx *gin.Context) {
 
 	if ctx == nil {
@@ -390,4 +390,3 @@ func LikeHandle(ctx *gin.Context) {
 
 	util.ResponseSuccess(ctx, nil)
 }
-

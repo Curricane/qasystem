@@ -2,13 +2,14 @@ package db
 
 import (
 	"fmt"
+	"qasystem/common"
+
 	"github.com/Curricane/logger"
 	"github.com/jmoiron/sqlx"
-	"qasystem/common"
 )
 
 // 创建某评论的回复
-func CreateReplyComment(comment *common.Comment) (err error){
+func CreateReplyComment(comment *common.Comment) (err error) {
 	tx, err := DB.Beginx()
 	if err != nil {
 		logger.Error("create post comment failed, comment:%#v, err:%v", comment, err)
@@ -79,7 +80,7 @@ func CreatePostComment(comment *common.Comment) (err error) {
 
 	sqlstr := `	insert into comment (comment_id, content, author_id)
 				values (?, ?, ?)`
-	_, err =  tx.Exec(sqlstr, comment.CommentId, comment.Content, comment.AuthorId)
+	_, err = tx.Exec(sqlstr, comment.CommentId, comment.Content, comment.AuthorId)
 	if err != nil {
 		logger.Error("insert comment failed, comment:%#v err:%v", comment, err)
 		tx.Rollback()
@@ -90,7 +91,7 @@ func CreatePostComment(comment *common.Comment) (err error) {
 				  comment_rel (comment_id, parent_id, level,question_id, reply_author_id, reply_comment_id) 
 				values (?, ?, ?, ?, ?, ?)`
 	_, err = tx.Exec(sqlstr, comment.CommentId, comment.ParentId, 1, comment.QuestionId,
-	comment.ReplyAuthorId, 0)
+		comment.ReplyAuthorId, 0)
 	if err != nil {
 		logger.Error("insert comment failed, comment:%#v err:%v", comment, err)
 		tx.Rollback()
@@ -116,23 +117,7 @@ func CreatePostComment(comment *common.Comment) (err error) {
 	return
 }
 
-/* 获取回复列表 level=1
-type Comment struct {
-	CommentId       int64     //
-	Content         string
-	AuthorId        int64
-	LikeCount       int
-	CommentCount    int
-	CreateTime      time.Time
-	ParentId        int64
-	QuestionId      int64
-	ReplyAuthorId   int64
-	ReplyCommentId  int64
-	AuthorName      string
-	ReplyAuthorName string
-	QuestionIdStr   string
-}
- */
+// GetCommentList 获取回复列表 level=1
 func GetCommentList(answerId, offset, limit int64) (commentList []*common.Comment, count int64, err error) {
 	var commentIdList []int64
 	sqlstr := `select comment_id from comment_rel where question_id = ? and level=1 limit ?, ?`
@@ -146,7 +131,7 @@ func GetCommentList(answerId, offset, limit int64) (commentList []*common.Commen
 		return
 	}
 
-	sqlstr = `	select comment_id, content, author_id, like_count, comment_count, create _time 
+	sqlstr = `	select comment_id, content, author_id, like_count, comment_count, create_time 
 				from comment where comment_id in (?)`
 	var tmpList []interface{}
 	for _, val := range commentIdList {
