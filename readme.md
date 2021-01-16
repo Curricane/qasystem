@@ -162,7 +162,7 @@
         - 高性能要求
         - 整个系统没有单点
     - snowflake算法
-        - 41为时间戳 | 10位节点id | 12位序列号
+        - 41位时间戳 | 10位节点id | 12位序列号
     - github: github.com/snoy/snoyflake
 ##### 账号数据库设计
 ```sql
@@ -211,7 +211,7 @@ CREATE TABLE `user` (
       KEY `idx_category_id` (`category_id`)
     ) ENGINE=InnoDB DEFAULT  CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
     ```
-        - 该表结构设计存在一些问题，category_id不应该存放在该表中，问题和分类是1:n的关系，
+        - 该表结构设计存在一些问题，category_id不应该存放在该表中，问题和分类是1:n的关系，目前先暂时设计为1:1关系，
         - 因此要新建一张表，存放categor_id - question_id，组成n:m的表结构
         - 或每个category_id下有哪些问题，推荐使用redis数据库，可进行交集，并集等集合操作
         - 或者把category_id视为一个专栏，形成一个1:1的关系
@@ -293,6 +293,93 @@ CREATE TABLE `user` (
 - 提问的问题有新回复
 ## 点赞模块
 ## 评论模块
+- 评论模块结构
+    - 两层评论结构
+        - level 1 对回答/问题的评论
+        - level 2 对评论的评论  
+    ![评论结构](./doc/picture/评论结构.png)
+- 评论模块的基本功能
+    - 两层评论的组织形式
+    - 从概念上分为评论和回复两种形式
+    - 评论的计数
+        - 评论数
+        - 点赞数
+- 表结构设计
+需要两张表，一张comment存储comment内容，一张comment_rel存储评论间的关系
+    - comment表结构
+    ```sql
+    CREATE TABLE `comment` (
+        `id` bigint(20) NOT NULL AUTO_INCREMENT,
+        `comment_id` bigint(20) NOT NULL,
+        `content` longtext COLLATE utf8mb4_general_ci NOT NULL,
+        `author_id` bigint(20) NOT NULL COMMENT '评论者的id',
+        `like_count` int(10) unsigned NOT NULL DEFAULT '0' COMMENT '点赞数量',
+        `comment_count` int(10) unsigned NOT NULL DEFAULT '0' COMMENT '评论数量',
+        `create_time` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+        `update_time` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        PRIMARY KEY (`id`),
+        UNIQUE KEY `idx_comment_id` (`comment_id`),
+        KEY `idx_author_id` (`author_id`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci
+    ```
+    - comment_rel表结构
+    ```sql
+    CREATE TABLE `comment_rel` (
+        `id` bigint(20) NOT NULL AUTO_INCREMENT,
+        `comment_id` bigint(20) unsigned NOT NULL,
+        `parent_id` bigint(20) NOT NULL COMMENT '评论的父id，1level的父id是回答id，2level的父id是要回复的评论id',
+        `level` int(11) NOT NULL,
+        `question_id` bigint(20) NOT NULL COMMENT '要评论的回答id/问题的id',
+        `reply_author_id` bigint(20) NOT NULL COMMENT '被回复的作者id',
+        `reply_comment_id` bigint(20) NOT NULL DEFAULT '0' COMMENT '被回复的评论id',
+        PRIMARY KEY (`id`),
+        KEY `idx_question_id_level` (`question_id`,`level`),
+        KEY `idx_parent_id_level` (`parent_id`,`level`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci
+    ```
+- 接口设计
+    | 接口名 | 接口 |
+    | :---- | :----|
+    | 发表评论接口 | /api/comment/post_comment |
+    | 发表回复接口 | /api/comment/post_reply |
+    | 获取评论列表接口 | /api/comment/list |
+    | 获取回复列表接口 | /api/comment/reply_list |
+    | 点赞接口 | /api/comment/like |
+- 发表评论
+    - CreatePostComment
+        - 获取前端传过来的Comment
+        - 补充Comment结构数据
+        - db通过Comment持久化评论
+            - 写入comment表
+            - 写入comment_rel表
+- 发表回复
+    - PostReplyHandle
+        - 获取前端传过来的Comment
+        - 补充Comment结构数据
+        - db通过Comment持久化评论
+            - 写入comment表
+            - 写入comment_rel表
+            - answer表/question表对应id评论数+1
+- 获取评论列表
+    - CommentListHandle
+        - 从上下文中获取 answer_id/question_id, offet, limit
+        - 获取level 1评论列表
+        - 补充评论列表中Comemnt结构数据
+            - 获取评论者信息
+            - 获取回复者信息
+        - 组建ApiCommentList，响应
+- 获取回复列表
+    - ReplyListHandle
+        - 从上下文中获取 answer_id/question_id, offet, limit
+        - 获取level 2评论列表
+        - 补充评论列表中Comemnt结构数据
+            - 获取评论者信息
+            - 获取回复者信息
+        - 组建ApiCommentList，响应
+- 点赞
+    - LikeHandle
+        - 获取前端传过来的Like
+        - 判断点赞类型，存入数据库
 - 评论列表
 - 评论发布
 ## 搜索模块
