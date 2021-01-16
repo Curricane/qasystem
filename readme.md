@@ -186,6 +186,47 @@ CREATE TABLE `user` (
 - 采用vue.js框架进行开发
 - 前端项目的地址，`https://github.com/isanxia/mercury-client`
 ## 收藏模块
+- 收藏模块功能介绍
+    - 用户可以收藏优质的答案
+    - 用户需要先创建收藏夹，然后再收藏
+    - 收藏夹只支持一层，不支持嵌套
+- 收藏表结构
+    - 收藏夹表
+    ```sql
+    CREATE TABLE `favorite_dir` (
+    `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+    `dir_id` bigint(20) NOT NULL,
+    `dir_name` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
+    `user_id` bigint(20) unsigned NOT NULL,
+    `count` int(10) unsigned NOT NULL DEFAULT '0',
+    `create_time` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+    `update_time` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (`dir_id`),
+    UNIQUE KEY `idx_id` (`id`) USING BTREE,
+    UNIQUE KEY `idx_user_dir_name` (`user_id`,`dir_name`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+    ```
+    - 收藏表
+    ```sql
+    CREATE TABLE `favorite` (
+    `id` bigint(20) NOT NULL AUTO_INCREMENT,
+    `answer_id` bigint(20) NOT NULL,
+    `dir_id` bigint(20) NOT NULL,
+    `user_id` bigint(20) NOT NULL,
+    `create_time` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+    `update_time` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `idx_user_id_answer_id` (`user_id`,`dir_id`,`answer_id`) USING BTREE
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+    ```
+- 接口设计
+    | 接口名 | 接口 |
+    | :---- | :-- |
+    | 添加收藏夹 | /api/favorite/add_dir |
+    | 添加收藏 | /api/favorite/add |
+    | 获取收藏夹列表 | /api/favorite/dir_list |
+    | 获取收藏列表 | /api/favorite/list |
+
 - 收藏列表
 - 添加收藏
 - 删除收藏
@@ -193,7 +234,7 @@ CREATE TABLE `user` (
 - 问题提交
     - 问题提交模块整体流程
     ![问题提交基本流程](./doc/picture/问题提交基本流程.png)
-    - 表结构设计
+    - 表结构设计 
     ```mysql
     CREATE TABLE `question` (
       `id` bigint(20) NOT NULL AUTO_INCREMENT,
@@ -380,8 +421,6 @@ CREATE TABLE `user` (
     - LikeHandle
         - 获取前端传过来的Like
         - 判断点赞类型，存入数据库
-- 评论列表
-- 评论发布
 ## 搜索模块
 - 全文搜索
 - 问题搜索
